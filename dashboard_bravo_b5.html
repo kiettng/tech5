@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard – B5 Technical Dept 5 · HCM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161b22;
+    --card:     #1c2330;
+    --border:   #2d3748;
+    --text:     #e6edf3;
+    --muted:    #7d8590;
+    --accent:   #3b82f6;
+    --green:    #22c55e;
+    --yellow:   #f59e0b;
+    --red:      #ef4444;
+    --purple:   #a78bfa;
+    --teal:     #2dd4bf;
+    --dept-gradient: linear-gradient(135deg, #1e3a5f 0%, #1c2330 100%);
+    --nhom-gradient: linear-gradient(135deg, #1a2e1a 0%, #1c2330 100%);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .topbar-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .topbar-meta { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* ── BREADCRUMB ── */
+  .breadcrumb {
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .breadcrumb span { cursor: pointer; transition: color .15s; }
+  .breadcrumb span:hover { color: var(--accent); }
+  .breadcrumb span.active { color: var(--text); font-weight: 600; }
+  .breadcrumb .sep { color: var(--border); }
+
+  /* ── MAIN LAYOUT ── */
+  .main { padding: 0 28px 48px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── VIEW TOGGLE ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-top: 4px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .section-title .tag.nhom { background: #065f46; color: #6ee7b7; }
+  .section-title .tag.nv { background: #3b1f6b; color: #c4b5fd; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.yellow::before { background: var(--yellow); }
+  .kpi-card.purple::before { background: var(--purple); }
+  .kpi-card.teal::before { background: var(--teal); }
+  .kpi-card.red::before { background: var(--red); }
+
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi-pct {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .pct-good  { background: #14532d44; color: var(--green); }
+  .pct-warn  { background: #78350f44; color: var(--yellow); }
+  .pct-bad   { background: #7f1d1d44; color: var(--red); }
+  .pct-great { background: #312e8144; color: var(--purple); }
+
+  /* ── GAUGE ROW ── */
+  .gauge-section { margin-bottom: 28px; }
+  .gauge-section h3 { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 14px; }
+  .gauge-row { display: flex; gap: 12px; }
+  .gauge-item { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .gauge-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .gauge-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .gauge-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+  .gauge-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; }
+  .gauge-act { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .gauge-plan { color: var(--muted); }
+
+  /* ── NHOM / NV TABLE ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .row-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+    display: grid;
+    grid-template-columns: 240px 1fr 1fr 1fr 90px;
+    align-items: center;
+    gap: 16px;
+  }
+  .row-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .row-card.nhom-row { background: var(--nhom-gradient); }
+  .row-card.nv-row { cursor: default; }
+  .row-card.nv-row:hover { border-color: var(--border); transform: none; }
+
+  .row-name { font-weight: 600; font-size: 14px; }
+  .row-code { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+  .mini-bar-group { }
+  .mini-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .mini-bar-bg { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; border-radius: 3px; }
+  .mini-val { font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+
+  .row-badge {
+    text-align: right;
+    font-size: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+  }
+  .drill-hint {
+    font-size: 10px;
+    color: var(--accent);
+    text-align: right;
+    margin-top: 2px;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 240px 1fr 1fr 1fr 90px;
+    gap: 16px;
+    padding: 8px 20px;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .table-header span:last-child { text-align: right; }
+
+  /* ── NV DETAIL ── */
+  .nv-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .nv-metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .nv-metric-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; font-weight: 600; }
+  .nv-metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
+  .nv-metric-row .label { color: var(--muted); }
+  .nv-metric-row .val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .nv-big-bar { margin-top: 12px; }
+  .nv-big-bar-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .nv-big-bar-fill { height: 100%; border-radius: 4px; }
+
+  .stat-trio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-box .s-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .stat-box .s-val { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── BACK BTN ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color .15s, border-color .15s;
+    margin-bottom: 20px;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* helpers */
+  .fmt { font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="dot"></div>
+    BRAVO · Dashboard Triển khai HCM
+  </div>
+  <div class="topbar-meta">Năm 2026 · Technical Dept 5</div>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb" id="breadcrumb">
+  <span class="active" onclick="showDept()">B5 · Phòng ban</span>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ══════════════════════════════════════════
+       VIEW 1: PHÒNG BAN (Dept Level)
+  ══════════════════════════════════════════ -->
+  <div class="view active" id="view-dept">
+    <div class="section-header">
+      <div class="section-title">
+        <span>B5 · Technical Dept 5</span>
+        <span class="tag">Phòng ban</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">HCM · Năm 2026</div>
+    </div>
+
+    <!-- KPI TOP ROW -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Doanh số kỳ trước</div>
+        <div class="kpi-value">6.61 tỷ</div>
+        <div class="kpi-sub">Chuyển sang từ trước 2026</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">DS Nhận · Thực hiện</div>
+        <div class="kpi-value">9.89 tỷ</div>
+        <div class="kpi-sub">KH: 14.27 tỷ</div>
+        <div class="kpi-pct pct-warn">69%</div>
+      </div>
+      <div class="kpi-card yellow">
+        <div class="kpi-label">DS Nghiệm thu · Thực hiện</div>
+        <div class="kpi-value">5.08 tỷ</div>
+        <div class="kpi-sub">KH: 11.89 tỷ</div>
+        <div class="kpi-pct pct-bad">43%</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">DS Chuyển Bảo hành · Thực hiện</div>
+        <div class="kpi-value">3.55 tỷ</div>
+        <div class="kpi-sub">KH: 9.52 tỷ</div>
+        <div class="kpi-pct pct-bad">37%</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Số nhóm triển khai</div>
+        <div class="kpi-value">2</div>
+        <div class="kpi-sub">Nhóm 1 & Nhóm 2</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tổng nhân viên</div>
+        <div class="kpi-value">11</div>
+        <div class="kpi-sub">NV có dữ liệu trong kỳ</div>
+      </div>
+    </div>
+
+    <!-- GAUGE -->
+    <div class="gauge-section">
+      <h3>Tiến độ theo chỉ tiêu</h3>
+      <div class="gauge-row">
+        <div class="gauge-item">
+          <div class="gauge-title">Doanh số Nhận</div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" style="width:69%;background:var(--yellow)"></div>
+          </div>
+          <div class="gauge-meta">
+            <span class="gauge-act" style="color:var(--yellow)">9,887M</span>
+            <span class="gauge-plan">KH 14,273M</span>
+          </div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-title">Doanh số Nghiệm thu</div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" style="width:43%;background:var(--red)"></div>
+          </div>
+          <div class="gauge-meta">
+            <span class="gauge-act" style="color:var(--red)">5,081M</span>
+            <span class="gauge-plan">KH 11,894M</span>
+          </div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-title">Doanh số Chuyển Bảo hành</div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" style="width:37%;background:var(--red)"></div>
+          </div>
+          <div class="gauge-meta">
+            <span class="gauge-act" style="color:var(--red)">3,555M</span>
+            <span class="gauge-plan">KH 9,516M</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- NHOM CARDS -->
+    <div class="section-header">
+      <div class="section-title" style="font-size:16px">Xem chi tiết theo Nhóm</div>
+      <div style="font-size:12px;color:var(--accent)">↓ Click nhóm để drill-down</div>
+    </div>
+
+    <div class="table-header">
+      <span>Nhóm</span>
+      <span>DS Nhận</span>
+      <span>DS Nghiệm thu</span>
+      <span>DS Bảo hành</span>
+      <span>% Nhận</span>
+    </div>
+
+    <div class="cards-grid">
+
+      <!-- NHOM 1 -->
+      <div class="row-card nhom-row" onclick="showNhom(1)">
+        <div>
+          <div class="row-name">Nhóm 1</div>
+          <div class="row-code">6 thành viên</div>
+        </div>
+        <div class="mini-bar-group">
+          <div class="mini-label">KH 7,748M</div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:61%;background:var(--yellow)"></div></div>
+          <div class="mini-val" style="color:var(--yellow)">4,707M · 61%</div>
+        </div>
+        <div class="mini-bar-group">
+          <div class="mini-label">KH 6,277M</div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:59%;background:var(--yellow)"></div></div>
+          <div class="mini-val" style="color:var(--yellow)">3,690M · 59%</div>
+        </div>
+        <div class="mini-bar-group">
+          <div class="mini-label">KH 5,022M</div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:59%;background:var(--yellow)"></div></div>
+          <div class="mini-val" style="color:var(--yellow)">2,980M · 59%</div>
+        </div>
+        <div class="row-badge" style="color:var(--yellow)">61%<div class="drill-hint">Chi tiết →</div></div>
+      </div>
+
+      <!-- NHOM 2 -->
+      <div class="row-card nhom-row" onclick="showNhom(2)">
+        <div>
+          <div class="row-name">Nhóm 2</div>
+          <div class="row-code">5 thành viên</div>
+        </div>
+        <div class="mini-bar-group">
+          <div class="mini-label">KH 6,526M</div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:79%;background:var(--green)"></div></div>
+          <div class="mini-val" style="color:var(--green)">5,179M · 79%</div>
+        </div>
+        <div class="mini-bar-group">
+          <div class="mini-label">KH 5,617M</div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:25%;background:var(--red)"></div></div>
+          <div class="mini-val" style="color:var(--red)">1,391M · 25%</div>
+        </div>
+        <div class="mini-bar-group">
+          <div class="mini-label">KH 4,494M</div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:13%;background:var(--red)"></div></div>
+          <div class="mini-val" style="color:var(--red)">574M · 13%</div>
+        </div>
+        <div class="row-badge" style="color:var(--green)">79%<div class="drill-hint">Chi tiết →</div></div>
+      </div>
+
+    </div>
+  </div><!-- /view-dept -->
+
+
+  <!-- ══════════════════════════════════════════
+       VIEW 2a: NHÓM 1
+  ══════════════════════════════════════════ -->
+  <div class="view" id="view-nhom1">
+    <div class="back-btn" onclick="showDept()">← Quay lại Phòng ban</div>
+
+    <div class="section-header">
+      <div class="section-title">
+        <span>Nhóm 1</span>
+        <span class="tag nhom">Nhóm</span>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">DS Kỳ trước</div>
+        <div class="kpi-value">4.15 tỷ</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">DS Nhận · Thực hiện</div>
+        <div class="kpi-value">4.71 tỷ</div>
+        <div class="kpi-sub">KH 7.75 tỷ</div>
+        <div class="kpi-pct pct-warn">61%</div>
+      </div>
+      <div class="kpi-card yellow">
+        <div class="kpi-label">DS Nghiệm thu · Thực hiện</div>
+        <div class="kpi-value">3.69 tỷ</div>
+        <div class="kpi-sub">KH 6.28 tỷ</div>
+        <div class="kpi-pct pct-warn">59%</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">DS Bảo hành · Thực hiện</div>
+        <div class="kpi-value">2.98 tỷ</div>
+        <div class="kpi-sub">KH 5.02 tỷ</div>
+        <div class="kpi-pct pct-warn">59%</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Số nhân viên</div>
+        <div class="kpi-value">6</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">NV đạt &gt; 80% DS Nhận</div>
+        <div class="kpi-value">1</div>
+        <div class="kpi-sub">NV0433 · Nguyễn Tuấn Kiệt</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-header">
+      <div class="section-title" style="font-size:16px">Nhân viên Nhóm 1</div>
+      <div style="font-size:12px;color:var(--accent)">↓ Click NV để xem chi tiết</div>
+    </div>
+
+    <div class="table-header">
+      <span>Nhân viên</span>
+      <span>DS Nhận</span>
+      <span>DS Nghiệm thu</span>
+      <span>DS Bảo hành</span>
+      <span>% Nhận</span>
+    </div>
+    <div class="cards-grid" id="nv-list-nhom1"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 2b: NHÓM 2
+  ══════════════════════════════════════════ -->
+  <div class="view" id="view-nhom2">
+    <div class="back-btn" onclick="showDept()">← Quay lại Phòng ban</div>
+
+    <div class="section-header">
+      <div class="section-title">
+        <span>Nhóm 2</span>
+        <span class="tag nhom">Nhóm</span>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">DS Kỳ trước</div>
+        <div class="kpi-value">2.46 tỷ</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">DS Nhận · Thực hiện</div>
+        <div class="kpi-value">5.18 tỷ</div>
+        <div class="kpi-sub">KH 6.53 tỷ</div>
+        <div class="kpi-pct pct-good">79%</div>
+      </div>
+      <div class="kpi-card yellow">
+        <div class="kpi-label">DS Nghiệm thu · Thực hiện</div>
+        <div class="kpi-value">1.39 tỷ</div>
+        <div class="kpi-sub">KH 5.62 tỷ</div>
+        <div class="kpi-pct pct-bad">25%</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">DS Bảo hành · Thực hiện</div>
+        <div class="kpi-value">574 triệu</div>
+        <div class="kpi-sub">KH 4.49 tỷ</div>
+        <div class="kpi-pct pct-bad">13%</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Số nhân viên</div>
+        <div class="kpi-value">5</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">NV vượt KH DS Nhận</div>
+        <div class="kpi-value">1</div>
+        <div class="kpi-sub">NV054 · Ngô Thị Trúc Quyên 102%</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-header">
+      <div class="section-title" style="font-size:16px">Nhân viên Nhóm 2</div>
+      <div style="font-size:12px;color:var(--accent)">↓ Click NV để xem chi tiết</div>
+    </div>
+
+    <div class="table-header">
+      <span>Nhân viên</span>
+      <span>DS Nhận</span>
+      <span>DS Nghiệm thu</span>
+      <span>DS Bảo hành</span>
+      <span>% Nhận</span>
+    </div>
+    <div class="cards-grid" id="nv-list-nhom2"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 3: CÁ NHÂN
+  ══════════════════════════════════════════ -->
+  <div class="view" id="view-nv">
+    <div class="back-btn" id="nv-back-btn">← Quay lại Nhóm</div>
+
+    <div class="section-header">
+      <div class="section-title" id="nv-title">
+        <span id="nv-name">NV</span>
+        <span class="tag nv">Cá nhân</span>
+      </div>
+      <div id="nv-code" style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace"></div>
+    </div>
+
+    <div class="stat-trio">
+      <div class="stat-box">
+        <div class="s-label">DS Nhận %</div>
+        <div class="s-val" id="nv-pct-nhan">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="s-label">DS Nghiệm thu %</div>
+        <div class="s-val" id="nv-pct-nt">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="s-label">DS Bảo hành %</div>
+        <div class="s-val" id="nv-pct-bh">—</div>
+      </div>
+    </div>
+
+    <div class="nv-detail-grid">
+      <!-- DS NHẬN -->
+      <div class="nv-metric-card">
+        <div class="nv-metric-title" style="border-bottom:1px solid var(--border);padding-bottom:10px">Doanh số Nhận</div>
+        <div class="nv-metric-row" style="margin-top:12px">
+          <span class="label">Kỳ trước</span><span class="val" id="nv-ktt">—</span>
+        </div>
+        <div class="nv-metric-row">
+          <span class="label">KH Năm 2026</span><span class="val" id="nv-nhan-kh">—</span>
+        </div>
+        <div class="nv-metric-row">
+          <span class="label">Thực hiện</span><span class="val" id="nv-nhan-th">—</span>
+        </div>
+        <div class="nv-big-bar">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+            <span>Tiến độ</span><span id="nv-nhan-pct">—</span>
+          </div>
+          <div class="nv-big-bar-bg">
+            <div class="nv-big-bar-fill" id="nv-nhan-bar" style="width:0%;background:var(--accent)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DS NGHIỆM THU -->
+      <div class="nv-metric-card">
+        <div class="nv-metric-title" style="border-bottom:1px solid var(--border);padding-bottom:10px">Doanh số Nghiệm thu</div>
+        <div class="nv-metric-row" style="margin-top:12px">
+          <span class="label">KH Năm 2026</span><span class="val" id="nv-nt-kh">—</span>
+        </div>
+        <div class="nv-metric-row">
+          <span class="label">Thực hiện</span><span class="val" id="nv-nt-th">—</span>
+        </div>
+        <div class="nv-big-bar">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+            <span>Tiến độ</span><span id="nv-nt-pct">—</span>
+          </div>
+          <div class="nv-big-bar-bg">
+            <div class="nv-big-bar-fill" id="nv-nt-bar" style="width:0%;background:var(--yellow)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DS BẢO HÀNH -->
+      <div class="nv-metric-card">
+        <div class="nv-metric-title" style="border-bottom:1px solid var(--border);padding-bottom:10px">Doanh số Chuyển Bảo hành</div>
+        <div class="nv-metric-row" style="margin-top:12px">
+          <span class="label">KH Năm 2026</span><span class="val" id="nv-bh-kh">—</span>
+        </div>
+        <div class="nv-metric-row">
+          <span class="label">Thực hiện</span><span class="val" id="nv-bh-th">—</span>
+        </div>
+        <div class="nv-big-bar">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+            <span>Tiến độ</span><span id="nv-bh-pct">—</span>
+          </div>
+          <div class="nv-big-bar-bg">
+            <div class="nv-big-bar-fill" id="nv-bh-bar" style="width:0%;background:var(--purple)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /view-nv -->
+
+</div><!-- /main -->
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const nhom1 = [
+  { code:'NV0110', name:'Phan Thanh Phương',    ktt:1518635260, nhan_kh:2974896000, nhan_th:1840141300, nhan_pct:'62%', nt_kh:2299680000, nt_th:1354189250, nt_pct:'59%', bh_kh:1839744000, bh_th:719407873,  bh_pct:'39%' },
+  { code:'NV0241', name:'Trương Hồng Chân Trí', ktt:654607920,  nhan_kh:1683072000, nhan_th:935083050,  nhan_pct:'56%', nt_kh:1402560000, nt_th:389642250,  nt_pct:'28%', bh_kh:1122048000, bh_th:639351173,  bh_pct:'57%' },
+  { code:'NV0413', name:'Nguyễn Văn Tân',       ktt:640704125,  nhan_kh:967680000,  nhan_th:509055000,  nhan_pct:'53%', nt_kh:806400000,  nt_th:439915350,  nt_pct:'55%', bh_kh:645120000,  bh_th:436165350,  bh_pct:'68%' },
+  { code:'NV0433', name:'Nguyễn Tuấn Kiệt',     ktt:513343800,  nhan_kh:1060992000, nhan_th:851538250,  nhan_pct:'80%', nt_kh:884160000,  nt_th:1271050800, nt_pct:'144%', bh_kh:707328000,  bh_th:513343800,  bh_pct:'73%' },
+  { code:'NV0488', name:'Nguyễn Trần Đoan Thi', ktt:0,          nhan_kh:0,          nhan_th:149400000,  nhan_pct:'0%',  nt_kh:0,          nt_th:0,          nt_pct:'0%',  bh_kh:0,          bh_th:0,          bh_pct:'0%'  },
+  { code:'NV056',  name:'Tôn Quốc Đạt',         ktt:826547520,  nhan_kh:1060992000, nhan_th:422070000,  nhan_pct:'40%', nt_kh:884160000,  nt_th:235285350,  nt_pct:'27%', bh_kh:707328000,  bh_th:671822272,  bh_pct:'95%' },
+];
+
+const nhom2 = [
+  { code:'NV0184', name:'Bùi Hữu Khanh',        ktt:532775670,  nhan_kh:2035584000, nhan_th:1381848250, nhan_pct:'68%', nt_kh:1696320000, nt_th:695457000,  nt_pct:'41%', bh_kh:1357056000, bh_th:78750000,  bh_pct:'6%'  },
+  { code:'NV0238', name:'Nguyễn Thành Được',     ktt:1029661560, nhan_kh:2368080000, nhan_th:1426185000, nhan_pct:'60%', nt_kh:2152800000, nt_th:0,          nt_pct:'0%',  bh_kh:1722240000, bh_th:282854000, bh_pct:'16%' },
+  { code:'NV0482', name:'Nguyễn Phú Trạng',      ktt:0,          nhan_kh:0,          nhan_th:345195000,  nhan_pct:'0%',  nt_kh:0,          nt_th:0,          nt_pct:'0%',  bh_kh:0,          bh_th:0,         bh_pct:'0%'  },
+  { code:'NV054',  name:'Ngô Thị Trúc Quyên',    ktt:480283670,  nhan_kh:1060992000, nhan_th:1080225000, nhan_pct:'102%',nt_kh:884160000,  nt_th:0,          nt_pct:'0%',  bh_kh:707328000,  bh_th:13001919,  bh_pct:'2%'  },
+  { code:'NV068',  name:'Nguyễn Hữu Toàn',       ktt:416106775,  nhan_kh:1060992000, nhan_th:945888250,  nhan_pct:'89%', nt_kh:884160000,  nt_th:695457000,  nt_pct:'79%', bh_kh:707328000,  bh_th:199829919, bh_pct:'28%' },
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const fmt = n => n === 0 ? '0' : (n >= 1e9 ? (n/1e9).toFixed(2)+' tỷ' : n >= 1e6 ? Math.round(n/1e6)+'M' : n.toLocaleString('vi'));
+const pctColor = p => { const v=parseInt(p); return v>=100?'var(--purple)':v>=80?'var(--green)':v>=50?'var(--yellow)':'var(--red)'; }
+const pctClass = p => { const v=parseInt(p); return v>=100?'pct-great':v>=80?'pct-good':v>=50?'pct-warn':'pct-bad'; }
+const barW = p => Math.min(parseInt(p),100)+'%';
+
+// ── RENDER NV ROWS ────────────────────────────────────────────────────────────
+function renderNvList(containerId, data, nhomId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = data.map((nv,i) => `
+    <div class="row-card nv-row" onclick="showNv(${nhomId},${i})" style="cursor:pointer">
+      <div>
+        <div class="row-name">${nv.name}</div>
+        <div class="row-code">${nv.code}</div>
+      </div>
+      <div class="mini-bar-group">
+        <div class="mini-label">KH ${fmt(nv.nhan_kh)}</div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW(nv.nhan_pct)};background:${pctColor(nv.nhan_pct)}"></div></div>
+        <div class="mini-val" style="color:${pctColor(nv.nhan_pct)}">${fmt(nv.nhan_th)}</div>
+      </div>
+      <div class="mini-bar-group">
+        <div class="mini-label">KH ${fmt(nv.nt_kh)}</div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW(nv.nt_pct)};background:${pctColor(nv.nt_pct)}"></div></div>
+        <div class="mini-val" style="color:${pctColor(nv.nt_pct)}">${fmt(nv.nt_th)}</div>
+      </div>
+      <div class="mini-bar-group">
+        <div class="mini-label">KH ${fmt(nv.bh_kh)}</div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW(nv.bh_pct)};background:${pctColor(nv.bh_pct)}"></div></div>
+        <div class="mini-val" style="color:${pctColor(nv.bh_pct)}">${fmt(nv.bh_th)}</div>
+      </div>
+      <div class="row-badge" style="color:${pctColor(nv.nhan_pct)}">${nv.nhan_pct}
+        <div class="drill-hint">Chi tiết →</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+let currentNhom = 1;
+
+function setViews(active) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(active).classList.add('active');
+}
+
+function showDept() {
+  setViews('view-dept');
+  document.getElementById('breadcrumb').innerHTML =
+    `<span class="active" onclick="showDept()">B5 · Phòng ban</span>`;
+}
+
+function showNhom(n) {
+  currentNhom = n;
+  setViews('view-nhom'+n);
+  document.getElementById('breadcrumb').innerHTML =
+    `<span onclick="showDept()">B5 · Phòng ban</span>
+     <span class="sep">/</span>
+     <span class="active">Nhóm ${n}</span>`;
+}
+
+function showNv(nhomId, idx) {
+  const data = nhomId===1 ? nhom1 : nhom2;
+  const nv = data[idx];
+  currentNhom = nhomId;
+
+  document.getElementById('nv-name').textContent = nv.name;
+  document.getElementById('nv-code').textContent = nv.code;
+
+  // big pct stats
+  const setPct = (id, pct) => {
+    const el = document.getElementById(id);
+    el.textContent = pct;
+    el.style.color = pctColor(pct);
+  };
+  setPct('nv-pct-nhan', nv.nhan_pct);
+  setPct('nv-pct-nt', nv.nt_pct);
+  setPct('nv-pct-bh', nv.bh_pct);
+
+  // DS Nhận
+  document.getElementById('nv-ktt').textContent = fmt(nv.ktt);
+  document.getElementById('nv-nhan-kh').textContent = fmt(nv.nhan_kh);
+  document.getElementById('nv-nhan-th').textContent = fmt(nv.nhan_th);
+  document.getElementById('nv-nhan-pct').textContent = nv.nhan_pct;
+  document.getElementById('nv-nhan-bar').style.width = barW(nv.nhan_pct);
+  document.getElementById('nv-nhan-bar').style.background = pctColor(nv.nhan_pct);
+
+  // DS NT
+  document.getElementById('nv-nt-kh').textContent = fmt(nv.nt_kh);
+  document.getElementById('nv-nt-th').textContent = fmt(nv.nt_th);
+  document.getElementById('nv-nt-pct').textContent = nv.nt_pct;
+  document.getElementById('nv-nt-bar').style.width = barW(nv.nt_pct);
+  document.getElementById('nv-nt-bar').style.background = pctColor(nv.nt_pct);
+
+  // DS BH
+  document.getElementById('nv-bh-kh').textContent = fmt(nv.bh_kh);
+  document.getElementById('nv-bh-th').textContent = fmt(nv.bh_th);
+  document.getElementById('nv-bh-pct').textContent = nv.bh_pct;
+  document.getElementById('nv-bh-bar').style.width = barW(nv.bh_pct);
+  document.getElementById('nv-bh-bar').style.background = pctColor(nv.bh_pct);
+
+  // back btn
+  document.getElementById('nv-back-btn').onclick = () => showNhom(nhomId);
+
+  setViews('view-nv');
+  document.getElementById('breadcrumb').innerHTML =
+    `<span onclick="showDept()">B5 · Phòng ban</span>
+     <span class="sep">/</span>
+     <span onclick="showNhom(${nhomId})">Nhóm ${nhomId}</span>
+     <span class="sep">/</span>
+     <span class="active">${nv.name}</span>`;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderNvList('nv-list-nhom1', nhom1, 1);
+renderNvList('nv-list-nhom2', nhom2, 2);
+</script>
+</body>
+</html>
